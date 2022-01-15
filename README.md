@@ -1,4 +1,4 @@
-# Alp-s-Simulator
+# Alp's-Simulator
 
 Welcome everyone!
 
