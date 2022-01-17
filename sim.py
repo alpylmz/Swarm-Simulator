@@ -13,7 +13,7 @@ class Sim:
         self.uav_count = uav_count
         self.uavs = [Uav(i,
                      Point(uniform(boundaries[0].x, boundaries[1].x), 
-                           uniform(boundaries[0].y, boundaries[1].y) )) for i in range(uav_count)]
+                           uniform(boundaries[0].y, boundaries[1].y) ), self) for i in range(uav_count)]
         
         self.time_interval = time_interval
         self.time = 0.0
@@ -32,6 +32,9 @@ class Sim:
         self.figure, ax = plt.subplots(figsize=(10, 10))
         self.line1, = ax.plot([coord.x for coord in self.coords], [coord.y for coord in self.coords])
 
+        plt.xlim([-10, 10])
+        plt.ylim([-10, 10])
+
 
         # setting title
         plt.title("Alp's Simulator", fontsize=20)   
@@ -46,7 +49,9 @@ class Sim:
 
     def step(self):
         for uav in self.uavs:
-            uav.current_coord += uav.current_speed
+            uav.update()
+        for uav in self.uavs:
+            uav.current_coord += Point(uav.current_speed.x * self.time_interval, uav.current_speed.y * self.time_interval)
 
         coords = self.getCoords()
         # updating data values
@@ -63,7 +68,7 @@ class Sim:
 
         time.sleep(self.time_interval)
         self.sim_time += self.time_interval
-        plt.title("Alp's Simulator " + str(self.sim_time), fontsize=20)
+        plt.title("Alp's Simulator %.2f" % self.sim_time, fontsize=20)
 
 
     def getCoords(self):
