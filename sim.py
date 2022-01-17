@@ -29,8 +29,13 @@ class Sim:
         plt.ion()
 
         # here we are creating sub plots
-        self.figure, ax = plt.subplots(figsize=(10, 10))
-        self.line1, = ax.plot([coord.x for coord in self.coords], [coord.y for coord in self.coords])
+        self.fig = plt.figure()
+        ax = self.fig.add_subplot(111)
+        x = [coord.x for coord in self.coords]
+        y = [coord.y for coord in self.coords]
+        self.uav_drawing, = ax.plot(x,y,label='toto',color='b',marker='o',ls='')
+        self.fig.show()
+
 
         plt.xlim([-10, 10])
         plt.ylim([-10, 10])
@@ -45,8 +50,6 @@ class Sim:
 
 
 
-
-
     def step(self):
         for uav in self.uavs:
             uav.update()
@@ -55,16 +58,15 @@ class Sim:
 
         coords = self.getCoords()
         # updating data values
-        self.line1.set_xdata([coord.x for coord in coords])
-        self.line1.set_ydata([coord.y for coord in coords])  
+        x = [coord.x for coord in coords]
+        y = [coord.y for coord in coords]
+        self.uav_drawing.set_data(x,y)
 
-        # drawing updated values
-        self.figure.canvas.draw()
 
         # This will run the GUI event
         # loop until all UI events
         # currently waiting have been processed
-        self.figure.canvas.flush_events()
+        self.fig.canvas.flush_events()
 
         time.sleep(self.time_interval)
         self.sim_time += self.time_interval
