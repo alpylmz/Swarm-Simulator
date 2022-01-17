@@ -28,15 +28,17 @@ class Uav:
         elif self.uav_number == 3:
             aim = Point(0,0)
         elif self.uav_number == 4:
-            aim = Point(0.5,0.5)
+            aim = Point(0.5,1.5)
 
         att_speed = self.calcAttractive(aim)
-        #rep_speed = self.calcRepulsive()
+        rep_speed = self.calcRepulsive()
 
-        self.current_speed = att_speed
-        #print("current speed of UAV%d is (%.2f, %.2f)" % (self.uav_number, self.current_speed.x, self.current_speed.y))
-        #print("current coord is (%.2f, %.2f)" % (self.current_speed.x, self.current_speed.y))
-
+        self.current_speed = att_speed + rep_speed
+        if(self.uav_number == 1):
+            print("current speed of UAV%d is (%.2f, %.2f)" % (self.uav_number, self.current_speed.x, self.current_speed.y))
+            print("current coord is (%.2f, %.2f)" % (self.current_coord.x, self.current_coord.y))
+            print("att_speed is (%.2f, %.2f)" % (att_speed.x, att_speed.y))
+            print("rep_speed is (%.2f, %.2f)" % (rep_speed.x, rep_speed.y))
         
     def calcAttractive(self, aim):
         return Point(aim.x - self.current_coord.x, aim.y - self.current_coord.y)
@@ -45,7 +47,8 @@ class Uav:
         uavCoords = [uav.current_coord for uav in self.sim.uavs if uav.uav_number != self.uav_number]
         return_speed = Point(0.0,0.0)
         for uav_coord in uavCoords:
-            diff = Point(uav_coord.x - self.current_coord.x, uav_coord.y - self.current_coord.y)
-            return_speed += diff
+            diff = Point(self.current_coord.x - uav_coord.x, self.current_coord.y - uav_coord.y)
+            if diff.length() < 0.5:
+                return_speed += 1/diff
 
         return return_speed
