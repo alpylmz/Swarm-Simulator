@@ -3,6 +3,15 @@ from helpers import Point, euDistance
 
 class Uav:
     def __init__(self, uav_num, coord, sim) -> None:
+        '''
+        The constructor of the class.
+        
+        :param self: the object itself
+        :param uav_num: the number of the UAV
+        :param coord: the current coordinate of the UAV
+        :param sim: the simulation object
+        :return: None
+        '''
         self.uav_number = uav_num
         self.current_coord = coord
         self.sim = sim
@@ -14,10 +23,24 @@ class Uav:
         self.wanted_speed = Point(0.01, 0.01)
 
     def set_speed(self, speed):
+        '''
+        Set the speed of the UAV.
+        
+        :param self: This is a reference to the instance of the class
+        :param speed: The speed you want to go at
+        :return: None
+        '''
         self.wanted_speed = speed
 
     ## FILL THIS FUNCTION FOR YOUR ALGORITHM
     def update(self):
+        '''
+        The function calculates the attractive and repulsive force for each UAV and sums them up to get
+        the current speed of each UAV.
+        
+        :param self: the object itself
+        :return: None
+        '''
         aim = Point(1,1)
         if self.uav_number == 0:
             aim = Point(1,1)
@@ -41,9 +64,23 @@ class Uav:
             print("rep_speed is (%.2f, %.2f)" % (rep_speed.x, rep_speed.y))
         
     def calcAttractive(self, aim):
+        '''
+        Calculate the attractive force of the aim point to the current point.
+        
+        :param self: This is a reference to the object that is calling the method
+        :param aim: the point we want to get to
+        :return: The attractive force is a vector that points from the current position to the target
+        position.
+        '''
         return Point(aim.x - self.current_coord.x, aim.y - self.current_coord.y)
 
     def calcRepulsive(self):
+        '''
+        Calculate the repulsive force for a UAV.
+        
+        :param self: the object that called the function
+        :return: The speed of the UAV.
+        '''
         uavCoords = [uav.current_coord for uav in self.sim.uavs if uav.uav_number != self.uav_number]
         return_speed = Point(0.0,0.0)
         for uav_coord in uavCoords:

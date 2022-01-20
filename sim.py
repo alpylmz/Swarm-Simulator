@@ -10,6 +10,16 @@ import matplotlib.pyplot as plt
 
 class Sim:
     def __init__(self, uav_count, time_interval = 0.01, boundaries=[Point(0,0), Point(10,10)]) -> None:
+        '''
+        Initialize the UAVs and set the initial positions of the UAVs.
+        
+        :param self: the object itself
+        :param uav_count: number of UAVs
+        :param time_interval: the time interval between each simulation step (optional)
+        :param boundaries: a list of two Point objects, representing the boundaries of the simulation
+        (optional)
+        :return: None
+        '''
         self.uav_count = uav_count
         self.uavs = [Uav(i,
                      Point(uniform(boundaries[0].x, boundaries[1].x), 
@@ -51,6 +61,12 @@ class Sim:
 
 
     def step(self):
+        '''
+        The function updates the coordinates of the UAVs and the coordinates of the UAVs' drawings.
+        
+        :param self: the object that is calling the method
+        :return: None
+        '''
         for uav in self.uavs:
             uav.update()
         for uav in self.uavs:
@@ -74,6 +90,12 @@ class Sim:
 
 
     def getCoords(self):
+        '''
+        Returns a list of the current coordinates of all the UAVs in the swarm.
+        
+        :param self: the object that called the function
+        :return: The current coordinates of each UAV.
+        '''
         return [uav.current_coord for uav in self.uavs]
 
 
