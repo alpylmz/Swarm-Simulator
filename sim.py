@@ -10,6 +10,11 @@ import sys
 import signal
 
 
+def _on_close(event):
+    plt.close('all')
+    sys.exit(0)
+
+
 class Sim:
     def __init__(self, agent_count, time_interval = 0.01, boundaries=[Point(0,0), Point(10,10)]) -> None:
         '''
@@ -54,6 +59,8 @@ class Sim:
         y = [coord.y for coord in self.coords]
         self.agent_drawing, = ax.plot(x,y,label='toto',color='b',marker='o',ls='')
         self.fig.show()
+
+        self.fig.canvas.mpl_connect('close_event', _on_close)
 
 
         plt.xlim([-10, 10])
