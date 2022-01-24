@@ -1,4 +1,4 @@
-# Alp's-Simulator
+# Swarm-Simulator
 
 Welcome everyone!
 
