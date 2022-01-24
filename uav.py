@@ -20,20 +20,20 @@ class Uav:
     def update(self):
         aim = Point(1,1)
         if self.uav_number == 0:
-            aim = Point(1,1)
+            aim = Point(2,2)
         elif self.uav_number == 1:
-            aim = Point(1,0)
+            aim = Point(2,0)
         elif self.uav_number == 2:
-            aim = Point(0,1)
+            aim = Point(0,2)
         elif self.uav_number == 3:
             aim = Point(0,0)
         elif self.uav_number == 4:
-            aim = Point(0.5,1.5)
+            aim = Point(1,1)
 
         att_speed = self.calcAttractive(aim)
         rep_speed = self.calcRepulsive()
 
-        self.current_speed = att_speed + rep_speed
+        self.wanted_speed = att_speed * 0.1 + rep_speed * 0.4
         if(self.uav_number == 1):
             print("current speed of UAV%d is (%.2f, %.2f)" % (self.uav_number, self.current_speed.x, self.current_speed.y))
             print("current coord is (%.2f, %.2f)" % (self.current_coord.x, self.current_coord.y))

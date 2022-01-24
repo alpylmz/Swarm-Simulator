@@ -20,6 +20,7 @@ class Sim:
         self.max_acceleration = 5.0
         self.max_jerk = 1.0
         self.max_jerk_for_time_interval = self.max_jerk / self.time_interval
+        self.acc_step = 4
 
         self.sim_time = 0.0
 
@@ -51,10 +52,34 @@ class Sim:
 
 
     def step(self):
-        for uav in self.uavs:
-            uav.update()
+        """
         for uav in self.uavs:
             uav.current_coord += Point(uav.current_speed.x * self.time_interval, uav.current_speed.y * self.time_interval)
+        """
+        new_positions = []
+        for uav in self.uavs:
+            uav.update()
+
+            new_acc = Point(0, 0)
+            
+            if uav.wanted_speed.x > uav.current_speed.x:
+                new_acc.x = uav.current_acc.x + self.acc_step
+            elif uav.wanted_speed.x < uav.current_speed.x:
+                new_acc.x = uav.current_acc.x - self.acc_step
+            
+            if uav.wanted_speed.y > uav.current_speed.y:
+                new_acc.y = uav.current_acc.y + self.acc_step
+            elif uav.wanted_speed.y < uav.current_speed.y:
+                new_acc.y = uav.current_acc.y - self.acc_step
+            
+            old_speed = uav.current_speed
+            new_speed = uav.current_speed + new_acc * self.time_interval
+
+            new_positions.append(uav.current_coord + (old_speed + new_speed)/2.0)
+            uav.current_speed = new_speed
+
+        for pose, uav in zip(new_positions, self.uavs):
+            uav.current_coord = pose
 
         coords = self.getCoords()
         # updating data values
