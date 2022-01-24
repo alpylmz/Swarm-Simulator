@@ -1,5 +1,5 @@
 from time import time
-from uav import Uav
+from agent import Agent
 from random import uniform
 from helpers import Point, euDistance
 
@@ -9,21 +9,21 @@ import matplotlib.pyplot as plt
 
 
 class Sim:
-    def __init__(self, uav_count, time_interval = 0.01, boundaries=[Point(0,0), Point(10,10)]) -> None:
+    def __init__(self, agent_count, time_interval = 0.01, boundaries=[Point(0,0), Point(10,10)]) -> None:
         '''
-        Initialize the UAVs and set the initial positions of the UAVs.
+        Initialize the agents and set the initial positions of the agents.
         
         :param self: the object itself
-        :param uav_count: number of UAVs
+        :param agent_count: number of agents
         :param time_interval: the time interval between each simulation step (optional)
         :param boundaries: a list of two Point objects, representing the boundaries of the simulation
         (optional)
         :return: None
         '''
-        self.uav_count = uav_count
-        self.uavs = [Uav(i,
+        self.agent_count = agent_count
+        self.agents = [Agent(i,
                      Point(uniform(boundaries[0].x, boundaries[1].x), 
-                           uniform(boundaries[0].y, boundaries[1].y) ), self) for i in range(uav_count)]
+                           uniform(boundaries[0].y, boundaries[1].y) ), self) for i in range(agent_count)]
         
         self.time_interval = time_interval
         self.time = 0.0
@@ -36,7 +36,7 @@ class Sim:
 
         self.sim_time = 0.0
 
-        self.coords = [uav.current_coord for uav in self.uavs]
+        self.coords = [agent.current_coord for agent in self.agents]
 
         # to run GUI event loop
         plt.ion()
@@ -46,7 +46,7 @@ class Sim:
         ax = self.fig.add_subplot(111)
         x = [coord.x for coord in self.coords]
         y = [coord.y for coord in self.coords]
-        self.uav_drawing, = ax.plot(x,y,label='toto',color='b',marker='o',ls='')
+        self.agent_drawing, = ax.plot(x,y,label='toto',color='b',marker='o',ls='')
         self.fig.show()
 
 
@@ -65,37 +65,37 @@ class Sim:
 
     def step(self):
         new_positions = []
-        for uav in self.uavs:
-            uav.update()
+        for agent in self.agents:
+            agent.update()
 
             new_acc = Point(0, 0)
             
-            if uav.wanted_speed.x > uav.current_speed.x:
-                new_acc.x = uav.current_acc.x + self.acc_step
-            elif uav.wanted_speed.x < uav.current_speed.x:
-                new_acc.x = uav.current_acc.x - self.acc_step
+            if agent.wanted_speed.x > agent.current_speed.x:
+                new_acc.x = agent.current_acc.x + self.acc_step
+            elif agent.wanted_speed.x < agent.current_speed.x:
+                new_acc.x = agent.current_acc.x - self.acc_step
             
-            if uav.wanted_speed.y > uav.current_speed.y:
-                new_acc.y = uav.current_acc.y + self.acc_step
-            elif uav.wanted_speed.y < uav.current_speed.y:
-                new_acc.y = uav.current_acc.y - self.acc_step
+            if agent.wanted_speed.y > agent.current_speed.y:
+                new_acc.y = agent.current_acc.y + self.acc_step
+            elif agent.wanted_speed.y < agent.current_speed.y:
+                new_acc.y = agent.current_acc.y - self.acc_step
             
-            old_speed = uav.current_speed
-            new_speed = uav.current_speed + new_acc * self.time_interval
+            old_speed = agent.current_speed
+            new_speed = agent.current_speed + new_acc * self.time_interval
 
-            new_positions.append(uav.current_coord + (old_speed + new_speed)/2.0)
-            uav.current_speed = new_speed
+            new_positions.append(agent.current_coord + (old_speed + new_speed)/2.0)
+            agent.current_speed = new_speed
 
         self.checkCollisions(new_positions)
 
-        for pose, uav in zip(new_positions, self.uavs):
-            uav.current_coord = pose
+        for pose, agent in zip(new_positions, self.agents):
+            agent.current_coord = pose
 
         coords = self.getCoords()
         # updating data values
         x = [coord.x for coord in coords]
         y = [coord.y for coord in coords]
-        self.uav_drawing.set_data(x,y)
+        self.agent_drawing.set_data(x,y)
 
 
         # This will run the GUI event
@@ -110,12 +110,12 @@ class Sim:
 
     def getCoords(self):
         '''
-        Returns a list of the current coordinates of all the UAVs in the swarm.
+        Returns a list of the current coordinates of all the agents in the swarm.
         
         :param self: the object that called the function
-        :return: The current coordinates of each UAV.
+        :return: The current coordinates of each agent.
         '''
-        return [uav.current_coord for uav in self.uavs]
+        return [agent.current_coord for agent in self.agents]
 
 
     def checkCollisions(self, positions):
@@ -123,7 +123,7 @@ class Sim:
             for index2, pose2 in enumerate(positions):
                 if index1 == index2:
                     continue
-                
+
                 dist = euDistance(pose1, pose2)
                 if dist < self.collision_err_dist:
                     print("There is a collision between agent %d and %d." % (index1, index2))
