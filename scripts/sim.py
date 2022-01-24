@@ -143,10 +143,10 @@ class Sim:
             for j, pose2 in enumerate(positions[i + 1:]):
                 dist = euDistance(pose1, pose2)
                 if dist < self.collision_err_dist:
-                    print("There is a collision between agent %d and %d." % (i, j))
+                    print("There is a collision between agent %d and %d." % (i, j+i+1))
 
                 elif dist < self.collision_warn_dist:
-                    print("Two agents are dangereously close, %d - %d" % (i, j))
+                    print("Two agents are dangereously close, %d - %d" % (i, j+i+1))
 
 
     def close_signal_handler(self, sig, frame):
