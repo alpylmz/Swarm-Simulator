@@ -6,6 +6,8 @@ from helpers import Point, euDistance
 import numpy as np
 import time
 import matplotlib.pyplot as plt
+import sys
+import signal
 
 
 class Sim:
@@ -20,6 +22,10 @@ class Sim:
         (optional)
         :return: None
         '''
+        # a signal handler to catch CTRL+C and Z
+        signal.signal(signal.SIGINT, self.close_signal_handler)
+        signal.signal(signal.SIGTSTP, self.close_signal_handler)
+
         self.agent_count = agent_count
         self.agents = [Agent(i,
                      Point(uniform(boundaries[0].x, boundaries[1].x), 
@@ -64,6 +70,11 @@ class Sim:
 
 
     def step(self):
+        '''
+        The function updates the positions of the agents and checks for collisions.
+        
+        :return: None
+        '''
         new_positions = []
         for agent in self.agents:
             agent.update()
@@ -130,4 +141,17 @@ class Sim:
 
                 elif dist < self.collision_warn_dist:
                     print("Two agents are dangereously close, %d - %d" % (index1, index2))
+
+
+    def close_signal_handler(self, sig, frame):
+        '''
+        When the user hits ctrl+C or ctrl+Z, the function close_signal_handler is called, which closes all figures
+        and exits the program.
+        
+        :param sig: The signal number
+        :param frame: the frame object that triggered the signal
+        :return: None
+        '''
+        plt.close('all')
+        sys.exit(0)
 
