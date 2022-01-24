@@ -1,3 +1,4 @@
+from re import M
 from time import time
 from agent import Agent
 from random import uniform
@@ -8,7 +9,8 @@ import time
 import matplotlib.pyplot as plt
 import sys
 import signal
-
+import json
+import argparse
 
 def _on_close(event):
     plt.close('all')
@@ -162,3 +164,27 @@ class Sim:
         plt.close('all')
         sys.exit(0)
 
+if __name__ == "__main__":
+    x = None
+    if len(sys.argv) == 1:
+        with open("conf/example_data.json", "r") as f:
+            x = json.load(f)
+    else:
+        parser = argparse.ArgumentParser(description='Swarm simulator')
+        parser.add_argument("--mission",
+                            metavar = "json_file",
+                            type = str,
+                            help = "json file for mission information" )
+        parser.add_argument("--timeinterval",
+                            metavar = "number",
+                            type = float,
+                            help = "time interval between steps")
+        args = parser.parse_args()
+        print("the data is ", args.mission)
+
+
+
+    sim = Sim(5)
+
+    while True:
+        sim.step()
