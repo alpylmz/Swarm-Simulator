@@ -57,11 +57,6 @@ class Uav:
         rep_speed = self.calcRepulsive()
 
         self.wanted_speed = att_speed * 0.1 + rep_speed * 0.4
-        if(self.uav_number == 1):
-            print("current speed of UAV%d is (%.2f, %.2f)" % (self.uav_number, self.current_speed.x, self.current_speed.y))
-            print("current coord is (%.2f, %.2f)" % (self.current_coord.x, self.current_coord.y))
-            print("att_speed is (%.2f, %.2f)" % (att_speed.x, att_speed.y))
-            print("rep_speed is (%.2f, %.2f)" % (rep_speed.x, rep_speed.y))
         
     def calcAttractive(self, aim):
         '''

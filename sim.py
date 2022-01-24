@@ -1,7 +1,7 @@
 from time import time
 from uav import Uav
 from random import uniform
-from helpers import Point
+from helpers import Point, euDistance
 
 import numpy as np
 import time
@@ -31,6 +31,8 @@ class Sim:
         self.max_jerk = 1.0
         self.max_jerk_for_time_interval = self.max_jerk / self.time_interval
         self.acc_step = 4
+        self.collision_warn_dist = 0.3
+        self.collision_err_dist = 0.1
 
         self.sim_time = 0.0
 
@@ -84,6 +86,8 @@ class Sim:
             new_positions.append(uav.current_coord + (old_speed + new_speed)/2.0)
             uav.current_speed = new_speed
 
+        self.checkCollisions(new_positions)
+
         for pose, uav in zip(new_positions, self.uavs):
             uav.current_coord = pose
 
@@ -113,4 +117,17 @@ class Sim:
         '''
         return [uav.current_coord for uav in self.uavs]
 
+
+    def checkCollisions(self, positions):
+        for index1, pose1 in enumerate(positions):
+            for index2, pose2 in enumerate(positions):
+                if index1 == index2:
+                    continue
+                
+                dist = euDistance(pose1, pose2)
+                if dist < self.collision_err_dist:
+                    print("There is a collision between agent %d and %d." % (index1, index2))
+
+                elif dist < self.collision_warn_dist:
+                    print("Two agents are dangereously close, %d - %d" % (index1, index2))
 
