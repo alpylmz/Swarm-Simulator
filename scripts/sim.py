@@ -40,10 +40,10 @@ class Sim:
         
         self.time_interval = time_interval
         self.time = 0.0
-        self.max_acceleration = 5.0
+        self.max_acceleration = 3.0
         self.max_jerk = 1.0
         self.max_jerk_for_time_interval = self.max_jerk / self.time_interval
-        self.acc_step = 4
+        self.acc_step = 1
         self.collision_warn_dist = 0.3
         self.collision_err_dist = 0.1
 
@@ -88,6 +88,8 @@ class Sim:
         
         :return: None
         '''
+        print("Target speed is " + str(self.agents[0].wanted_speed))
+        print("Current speed is " + str(self.agents[0].current_speed))
         self.updateTarget()
         new_positions = []
         for agent in self.agents:
@@ -105,11 +107,21 @@ class Sim:
             elif agent.wanted_speed.y < agent.current_speed.y:
                 new_acc.y = agent.current_acc.y - self.acc_step
             
+            if new_acc.x > 0:
+                new_acc.x = min(self.max_acceleration, new_acc.x)
+            else:
+                new_acc.x = max(self.max_acceleration * -1, new_acc.x)
+            if new_acc.y > 0:
+                new_acc.y = min(self.max_acceleration, new_acc.y)
+            else:
+                new_acc.y = max(self.max_acceleration * -1, new_acc.y)
+
             old_speed = agent.current_speed
             new_speed = agent.current_speed + new_acc * self.time_interval
 
             new_positions.append(agent.current_coord + (old_speed + new_speed)/2.0)
             agent.current_speed = new_speed
+            agent.current_acc = new_acc
 
         self.checkCollisions(new_positions)
 
