@@ -1,4 +1,4 @@
-from math import sqrt
+from math import sqrt, isclose
 
 
 class Point:
@@ -69,6 +69,19 @@ class Point:
         '''
         return Point(o / self.x,
                      o / self.y)
+
+    def __eq__(self, o):
+        '''
+        If the two points are close enough, return True.
+        
+        :param o: the other point
+        :return: Boolean
+        '''
+        if isclose(self.x, o.x) and isclose(self.y, o.y):
+            return True
+        return False
+
+
 
     def length(self):
         '''

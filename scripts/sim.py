@@ -49,6 +49,9 @@ class Sim:
 
         self.sim_time = 0.0
 
+        self.target = Point(1, 1)
+        self.target_update_state = 0
+
         self.coords = [agent.current_coord for agent in self.agents]
 
         # to run GUI event loop
@@ -60,6 +63,7 @@ class Sim:
         x = [coord.x for coord in self.coords]
         y = [coord.y for coord in self.coords]
         self.agent_drawing, = ax.plot(x,y,label='toto',color='b',marker='o',ls='')
+        self.target_drawing, = ax.plot(self.target.x, self.target.y, color='r', marker='o')
         self.fig.show()
 
         self.fig.canvas.mpl_connect('close_event', _on_close)
@@ -84,6 +88,7 @@ class Sim:
         
         :return: None
         '''
+        self.updateTarget()
         new_positions = []
         for agent in self.agents:
             agent.update()
@@ -116,6 +121,7 @@ class Sim:
         x = [coord.x for coord in coords]
         y = [coord.y for coord in coords]
         self.agent_drawing.set_data(x,y)
+        self.target_drawing.set_data(self.target.x, self.target.y)
 
 
         # This will run the GUI event
@@ -126,6 +132,44 @@ class Sim:
         time.sleep(self.time_interval)
         self.sim_time += self.time_interval
         plt.title("Alp's Simulator %.2f" % self.sim_time, fontsize=20)
+
+    def updateTarget(self):
+        target_update_rate = 0.1
+        # from (1, 1) to (5, 1)
+        if self.target_update_state == 0:
+            if self.target == Point(5, 1):
+                self.target_update_state = 1
+                return    
+            self.target.x += target_update_rate
+        # from (5, 1) to (5, 5)
+        elif self.target_update_state == 1:
+            if self.target == Point(5, 5):
+                self.target_update_state = 2
+                return
+            self.target.y += target_update_rate
+        # from (5, 5) to (-5, 5)
+        elif self.target_update_state == 2:
+            if self.target == Point(-5, 5):
+                self.target_update_state = 3
+                return
+            self.target.x -= target_update_rate
+        # from (-5, 5) to (-5, -5)
+        elif self.target_update_state == 3:
+            if self.target == Point(-5, -5):
+                self.target_update_state = 4
+                return
+            self.target.y -= target_update_rate
+        # from (-5, -5) to (1, 1), initial position
+        elif self.target_update_state == 4:
+            if self.target == Point(1, 1):
+                self.target_update_state = 0
+                return
+            self.target.x += target_update_rate
+            self.target.y += target_update_rate
+        else:
+            print("You mixed something in target states!")
+            exit(42)
+        
 
 
     def getCoords(self):
@@ -181,7 +225,7 @@ if __name__ == "__main__":
 
 
 
-    sim = Sim(5)
+    sim = Sim(4)
 
     while True:
         sim.step()

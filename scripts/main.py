@@ -1,7 +1,7 @@
 from sim import Sim
 
 
-sim = Sim(5)
+sim = Sim(4)
 
 while True:
     sim.step()

@@ -43,20 +43,21 @@ class Agent:
         '''
         aim = Point(1,1)
         if self.agent_number == 0:
-            aim = Point(2,2)
+            aim = Point(1,1) + self.sim.target
         elif self.agent_number == 1:
-            aim = Point(2,0)
+            aim = Point(-1,-1) + self.sim.target
         elif self.agent_number == 2:
-            aim = Point(0,2)
+            aim = Point(-1,1) + self.sim.target
         elif self.agent_number == 3:
-            aim = Point(0,0)
-        elif self.agent_number == 4:
-            aim = Point(1,1)
+            aim = Point(1,-1) + self.sim.target
+        else:
+            print("Aim is not defined for UAV %d!" % self.agent_number)
+            exit(42)
 
         att_speed = self.calcAttractive(aim)
         rep_speed = self.calcRepulsive()
 
-        self.wanted_speed = att_speed * 0.1 + rep_speed * 0.4
+        self.wanted_speed = att_speed * 0.3 + rep_speed * 0.5
         
     def calcAttractive(self, aim):
         '''
