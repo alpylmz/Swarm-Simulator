@@ -81,6 +81,13 @@ class Point:
             return True
         return False
 
+    def __str__(self):
+        '''
+        Return a string representation of the point object.
+        :return: A string representation of the point object.
+        '''
+        return "(%.2f, %.2f)" % (self.x, self.y)
+
 
 
     def length(self):
