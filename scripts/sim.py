@@ -54,7 +54,7 @@ class Sim:
         self.collision_count = 0
 
         # there are several paths that you can choose for target, number indicates that
-        self.target_path_index = 0
+        self.target_path_index = 2
         self.target = Point(1, 1)
         self.target_update_state = 0
 
@@ -75,8 +75,8 @@ class Sim:
         self.fig.canvas.mpl_connect('close_event', self._on_close)
 
 
-        plt.xlim([-10, 10])
-        plt.ylim([-10, 10])
+        plt.xlim([-15, 15])
+        plt.ylim([-15, 15])
 
 
         # setting title
