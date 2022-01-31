@@ -39,11 +39,12 @@ class Sim:
                            uniform(boundaries[0].y, boundaries[1].y) ), self) for i in range(agent_count)]
         
         self.time_interval = time_interval
+        self.acc_for_interval = 1/time_interval
         self.time = 0.0
-        self.max_acceleration = 3.0
+        self.max_acceleration = 800.0
         self.max_jerk = 1.0
         self.max_jerk_for_time_interval = self.max_jerk / self.time_interval
-        self.acc_step = 1
+        self.acc_step = 16000
         self.collision_warn_dist = 0.3
         self.collision_err_dist = 0.1
 
@@ -88,25 +89,40 @@ class Sim:
         
         :return: None
         '''
-        print("Target speed is " + str(self.agents[0].wanted_speed))
-        print("Current speed is " + str(self.agents[0].current_speed))
         self.updateTarget()
         new_positions = []
-        for agent in self.agents:
+        for index, agent in enumerate(self.agents):
             agent.update()
 
             new_acc = Point(0, 0)
             
-            if agent.wanted_speed.x > agent.current_speed.x:
-                new_acc.x = agent.current_acc.x + self.acc_step
-            elif agent.wanted_speed.x < agent.current_speed.x:
-                new_acc.x = agent.current_acc.x - self.acc_step
-            
-            if agent.wanted_speed.y > agent.current_speed.y:
-                new_acc.y = agent.current_acc.y + self.acc_step
-            elif agent.wanted_speed.y < agent.current_speed.y:
-                new_acc.y = agent.current_acc.y - self.acc_step
-            
+            diff_x = agent.wanted_speed.x - agent.current_speed.x
+            diff_x *= self.acc_for_interval
+            if diff_x > 0:
+                if diff_x > self.acc_step:
+                    new_acc.x = agent.current_acc.x + self.acc_step
+                else:
+                    new_acc.x = diff_x
+
+            elif diff_x < 0:
+                if (diff_x * -1) < ( -1 * self.acc_step):
+                    new_acc.x = agent.current_acc.x - self.acc_step
+                else:
+                    new_acc.x = diff_x
+
+            diff_y = agent.wanted_speed.y - agent.current_speed.y
+            diff_y *= self.acc_for_interval
+            if diff_y > 0:
+                if diff_y > self.acc_step:
+                    new_acc.y = agent.current_acc.y + self.acc_step
+                else:
+                    new_acc.y = diff_y
+
+            elif diff_y < 0:
+                if (diff_y * -1) < (-1 * self.acc_step):
+                    new_acc.y = agent.current_acc.y - self.acc_step
+                else:
+                    new_acc.y = diff_y
             if new_acc.x > 0:
                 new_acc.x = min(self.max_acceleration, new_acc.x)
             else:
@@ -121,7 +137,8 @@ class Sim:
 
             new_positions.append(agent.current_coord + (old_speed + new_speed)/2.0)
             agent.current_speed = new_speed
-            agent.current_acc = new_acc
+            self.agents[index].current_acc = new_acc
+            #agent.current_acc = new_acc
 
         self.checkCollisions(new_positions)
 

@@ -86,7 +86,7 @@ class Point:
         Return a string representation of the point object.
         :return: A string representation of the point object.
         '''
-        return "(%.2f, %.2f)" % (self.x, self.y)
+        return "(%.10f, %.10f)" % (self.x, self.y)
 
 
 

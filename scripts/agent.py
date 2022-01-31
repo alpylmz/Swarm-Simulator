@@ -1,5 +1,12 @@
+from time import sleep
 from helpers import Point, euDistance
+from enum import Enum
+from numpy import sign, isclose
 
+class AlgoType(Enum):
+    DEFAULT = 1
+    SLIDING1 = 2
+    SLIDING2 = 3
 
 class Agent:
     def __init__(self, agent_num, coord, sim) -> None:
@@ -19,8 +26,11 @@ class Agent:
             self.current_speed = Point(0.01, 0.01)
         else:
             self.current_speed = Point(-0.01, -0.01)
-        self.current_acc = Point(0.0, 0.0)
-        self.wanted_speed = Point(0.01, 0.01)
+        self.current_acc = Point(0., 0.)
+        self.wanted_speed = Point(0., 0.)
+        self.algorithm_type = AlgoType.SLIDING2
+        self.attractive_constant = 0.2
+        self.repulsive_constant = 0.9
 
     def set_speed(self, speed):
         '''
@@ -57,7 +67,38 @@ class Agent:
         att_speed = self.calcAttractive(aim)
         rep_speed = self.calcRepulsive()
 
-        self.wanted_speed = att_speed * 0.3 + rep_speed * 0.5
+        if self.algorithm_type == AlgoType.DEFAULT:
+            self.wanted_speed = att_speed * self.attractive_constant + rep_speed * self.repulsive_constant
+        # assume u_o is (0.1,0.1)
+        elif self.algorithm_type == AlgoType.SLIDING1:
+            self.wanted_speed = att_speed * self.attractive_constant + rep_speed * self.repulsive_constant
+            s_i = self.current_speed + self.wanted_speed * 100
+            temp = Point(sign(s_i.x), sign(s_i.y))
+            self.wanted_speed = temp * 0.1
+        elif self.algorithm_type == AlgoType.SLIDING2:
+            self.wanted_speed = att_speed * self.attractive_constant + rep_speed * self.repulsive_constant
+        
+            att_derivative = Point(-1, -1) * self.attractive_constant
+            # since the repulsive force will not be used as long as there is a safe distance between agents,
+            # I will not calculate repulsive force derivative for simplicity
+            # I will assume that in any formation repulsive force will be (0, 0)
+            rep_derivative = Point(0,0)
+
+            #print("curr acc is ", str(self.current_acc))
+            #s_derivative = self.current_acc + att_derivative
+            s_derivative = self.current_acc + att_derivative
+            
+            boundary_val = 0.2 * self.sim.acc_for_interval
+            if s_derivative.x < boundary_val and s_derivative.x > -boundary_val and s_derivative.y < boundary_val and s_derivative.y > -boundary_val:
+                print("deriv is close for agent %d" % self.agent_number, str(s_derivative)),
+                print("attractive part is ", str(att_derivative))
+                print("current acc is ", str(self.current_acc))
+                return
+                #input()
+            
+            s_i = self.current_speed + self.wanted_speed * 100         
+            self.wanted_speed = Point(sign(s_i.x)*0.1, sign(s_i.y)*0.1)
+
         
     def calcAttractive(self, aim):
         '''
