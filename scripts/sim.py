@@ -3,6 +3,7 @@ from time import sleep, time
 from agent import Agent
 from random import uniform
 from helpers import Point, euDistance
+from target_update import targetUpdate
 
 import numpy as np
 import time
@@ -52,6 +53,8 @@ class Sim:
         self.dangerous_event_count = 0
         self.collision_count = 0
 
+        # there are several paths that you can choose for target, number indicates that
+        self.target_path_index = 0
         self.target = Point(1, 1)
         self.target_update_state = 0
 
@@ -167,47 +170,15 @@ class Sim:
 
     def updateTarget(self):
         target_update_rate = 0.1
-        # from (1, 1) to (5, 1)
-        if self.target_update_state == 0:
-            if self.target == Point(5, 1):
-                self.target_update_state = 1
-                return    
-            self.target.x += target_update_rate
-        # from (5, 1) to (5, 5)
-        elif self.target_update_state == 1:
-            if self.target == Point(5, 5):
-                self.target_update_state = 2
-                return
-            self.target.y += target_update_rate
-        # from (5, 5) to (-5, 5)
-        elif self.target_update_state == 2:
-            if self.target == Point(-5, 5):
-                self.target_update_state = 3
-                return
-            self.target.x -= target_update_rate
-        # from (-5, 5) to (-5, -5)
-        elif self.target_update_state == 3:
-            if self.target == Point(-5, -5):
-                self.target_update_state = 4
-                return
-            self.target.y -= target_update_rate
-        # from (-5, -5) to (1, 1), initial position
-        elif self.target_update_state == 4:
-            if self.target == Point(1, 1):
-                # This if you want to end the simulation after one loop
-                self._on_close(None)
-                
-                # This if you want to continue the simulation endlessly
-                """
-                self.target_update_state = 0
-                return
-                """
-            self.target.x += target_update_rate
-            self.target.y += target_update_rate
-        else:
-            print("You mixed something in target states!")
-            exit(42)
-        
+        self.target, self.target_update_state = targetUpdate(target_update_rate, self.target_update_state, self.target, self.target_path_index)
+        if self.target is None:
+            # This if you want to end the simulation after one loop
+            self._on_close(None)
+            # This if you want to continue the simulation endlessly
+            """
+            target_state = 0
+            return
+            """
 
 
     def getCoords(self):
