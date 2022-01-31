@@ -46,6 +46,7 @@ class Sim:
         self.collision_warn_dist = 0.3
         self.collision_err_dist = 0.1
 
+
         self.sim_time = 0.0
 
         # benchmark
@@ -53,9 +54,16 @@ class Sim:
         self.dangerous_event_count = 0
         self.collision_count = 0
 
+        self.agent_paths = []
+        for i in range(self.agent_count):
+            self.agent_paths.append([[],[]])
+
+
         # there are several paths that you can choose for target, number indicates that
         self.target_path_index = 2
         self.target = Point(1, 1)
+        self.target_path_x = [self.target.x]
+        self.target_path_y = [self.target.y]
         self.target_update_state = 0
 
         self.coords = [agent.current_coord for agent in self.agents]
@@ -65,11 +73,18 @@ class Sim:
 
         # here we are creating sub plots
         self.fig = plt.figure()
-        ax = self.fig.add_subplot(111)
+        self.ax = self.fig.add_subplot(111)
         x = [coord.x for coord in self.coords]
         y = [coord.y for coord in self.coords]
-        self.agent_drawing, = ax.plot(x,y,label='toto',color='b',marker='o',ls='')
-        self.target_drawing, = ax.plot(self.target.x, self.target.y, color='r', marker='o')
+        self.agent_drawing, = self.ax.plot(x,y,label='toto',color='b',marker='o',ls='')
+        self.target_drawing, = self.ax.plot(self.target.x, self.target.y, color='r', marker='o')
+        self.target_path_drawing, = self.ax.plot(self.target_path_x, self.target_path_y, color='r')
+
+        self.agent_path_drawings = []
+        for i in range(self.agent_count):
+            self.agent_path_drawings.append(self.ax.plot(0,0, color = 'b'))
+
+
         self.fig.show()
 
         self.fig.canvas.mpl_connect('close_event', self._on_close)
@@ -140,9 +155,13 @@ class Sim:
             old_speed = agent.current_speed
             new_speed = agent.current_speed + new_acc * self.time_interval
 
-            new_positions.append(agent.current_coord + (old_speed + new_speed)/2.0)
+            new_pose = agent.current_coord + (old_speed + new_speed)/2.0
+            new_positions.append(new_pose)
+            self.agent_paths[index][0].append(new_pose.x)
+            self.agent_paths[index][1].append(new_pose.y)
             agent.current_speed = new_speed
             self.agents[index].current_acc = new_acc
+
             #agent.current_acc = new_acc
             self.algorithm_error += agent.calcError()
 
@@ -157,6 +176,13 @@ class Sim:
         y = [coord.y for coord in coords]
         self.agent_drawing.set_data(x,y)
         self.target_drawing.set_data(self.target.x, self.target.y)
+        
+        self.target_path_x.append(self.target.x)
+        self.target_path_y.append(self.target.y)
+        self.target_path_drawing.set_data(self.target_path_x, self.target_path_y)
+
+        for i in range(self.agent_count):
+            self.agent_path_drawings[i][0].set_data(self.agent_paths[i][0], self.agent_paths[i][1])
 
 
         # This will run the GUI event
@@ -210,6 +236,33 @@ class Sim:
         
         :param event: the event that triggered the callback
         '''
+        """
+        ax = self.fig.add_subplot(111)
+        self.target_path_drawing, = ax.plot(self.target_path_x, self.target_path_y, color='r')
+
+        self.agent_path_drawings = []
+        for i in range(self.agent_count):
+            self.agent_path_drawings.append(ax.plot(0,0, color = 'b'))
+        """
+
+        self.fig.clear()
+        self.ax = self.fig.add_subplot(111)
+        self.target_path_drawing, = self.ax.plot(self.target_path_x, self.target_path_y, color='r')
+        self.target_path_drawing.set_data(self.target_path_x, self.target_path_y)
+
+        self.agent_path_drawings = []
+        for i in range(self.agent_count):
+            self.agent_path_drawings.append(self.ax.plot(0,0, color = 'b'))
+
+        for i in range(self.agent_count):
+            self.agent_path_drawings[i][0].set_data(self.agent_paths[i][0], self.agent_paths[i][1])
+        
+        plt.xlim([-15, 15])
+        plt.ylim([-15, 15])
+
+        self.fig.canvas.flush_events()
+        plt.show()
+
         plt.close('all')
         print("--------------------------------------------------")
         print("Simulation time is %.2f." % self.sim_time)
