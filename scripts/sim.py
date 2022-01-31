@@ -1,5 +1,5 @@
 from re import M
-from time import time
+from time import sleep, time
 from agent import Agent
 from random import uniform
 from helpers import Point, euDistance
@@ -12,12 +12,10 @@ import signal
 import json
 import argparse
 
-def _on_close(event):
-    plt.close('all')
-    sys.exit(0)
 
 
 class Sim:
+
     def __init__(self, agent_count, time_interval = 0.01, boundaries=[Point(0,0), Point(10,10)]) -> None:
         '''
         Initialize the agents and set the initial positions of the agents.
@@ -40,7 +38,6 @@ class Sim:
         
         self.time_interval = time_interval
         self.acc_for_interval = 1/time_interval
-        self.time = 0.0
         self.max_acceleration = 800.0
         self.max_jerk = 1.0
         self.max_jerk_for_time_interval = self.max_jerk / self.time_interval
@@ -49,6 +46,11 @@ class Sim:
         self.collision_err_dist = 0.1
 
         self.sim_time = 0.0
+
+        # benchmark
+        self.algorithm_error = 0.0
+        self.dangerous_event_count = 0
+        self.collision_count = 0
 
         self.target = Point(1, 1)
         self.target_update_state = 0
@@ -67,7 +69,7 @@ class Sim:
         self.target_drawing, = ax.plot(self.target.x, self.target.y, color='r', marker='o')
         self.fig.show()
 
-        self.fig.canvas.mpl_connect('close_event', _on_close)
+        self.fig.canvas.mpl_connect('close_event', self._on_close)
 
 
         plt.xlim([-10, 10])
@@ -139,6 +141,7 @@ class Sim:
             agent.current_speed = new_speed
             self.agents[index].current_acc = new_acc
             #agent.current_acc = new_acc
+            self.algorithm_error += agent.calcError()
 
         self.checkCollisions(new_positions)
 
@@ -191,8 +194,14 @@ class Sim:
         # from (-5, -5) to (1, 1), initial position
         elif self.target_update_state == 4:
             if self.target == Point(1, 1):
+                # This if you want to end the simulation after one loop
+                self._on_close(None)
+                
+                # This if you want to continue the simulation endlessly
+                """
                 self.target_update_state = 0
                 return
+                """
             self.target.x += target_update_rate
             self.target.y += target_update_rate
         else:
@@ -217,10 +226,29 @@ class Sim:
                 dist = euDistance(pose1, pose2)
                 if dist < self.collision_err_dist:
                     print("There is a collision between agent %d and %d." % (i, j+i+1))
+                    self.collision_count += 1
 
                 elif dist < self.collision_warn_dist:
                     print("Two agents are dangereously close, %d - %d" % (i, j+i+1))
+                    self.dangerous_event_count += 1
+                    
 
+    def _on_close(self, event):
+        '''
+        The function is called when the user closes the GUI window
+        
+        :param event: the event that triggered the callback
+        '''
+        plt.close('all')
+        print("--------------------------------------------------")
+        print("Simulation time is %.2f." % self.sim_time)
+        print("The algorithms total error is %.2f." % self.algorithm_error)
+        print("Average error is %.2f." % (self.algorithm_error/self.sim_time))
+        print("--------------------------------------------------")
+        print("Dangereous event count is %d." % self.dangerous_event_count)
+        print("Collision count is %d." % self.collision_count)
+        print("--------------------------------------------------")
+        sys.exit(0)
 
     def close_signal_handler(self, sig, frame):
         '''

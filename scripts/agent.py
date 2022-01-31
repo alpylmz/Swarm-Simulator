@@ -29,7 +29,7 @@ class Agent:
         self.current_acc = Point(0., 0.)
         self.wanted_speed = Point(0., 0.)
         self.algorithm_type = AlgoType.SLIDING2
-        self.attractive_constant = 0.2
+        self.attractive_constant = 0.5
         self.repulsive_constant = 0.9
 
     def set_speed(self, speed):
@@ -51,18 +51,7 @@ class Agent:
         :param self: the object itself
         :return: None
         '''
-        aim = Point(1,1)
-        if self.agent_number == 0:
-            aim = Point(1,1) + self.sim.target
-        elif self.agent_number == 1:
-            aim = Point(-1,-1) + self.sim.target
-        elif self.agent_number == 2:
-            aim = Point(-1,1) + self.sim.target
-        elif self.agent_number == 3:
-            aim = Point(1,-1) + self.sim.target
-        else:
-            print("Aim is not defined for UAV %d!" % self.agent_number)
-            exit(42)
+        aim = self.calcAimPoint()
 
         att_speed = self.calcAttractive(aim)
         rep_speed = self.calcRepulsive()
@@ -90,14 +79,32 @@ class Agent:
             
             boundary_val = 0.2 * self.sim.acc_for_interval
             if s_derivative.x < boundary_val and s_derivative.x > -boundary_val and s_derivative.y < boundary_val and s_derivative.y > -boundary_val:
-                print("deriv is close for agent %d" % self.agent_number, str(s_derivative)),
-                print("attractive part is ", str(att_derivative))
-                print("current acc is ", str(self.current_acc))
+                #print("deriv is close for agent %d" % self.agent_number, str(s_derivative)),
+                #print("attractive part is ", str(att_derivative))
+                #print("current acc is ", str(self.current_acc))
                 return
-                #input()
             
             s_i = self.current_speed + self.wanted_speed * 100         
             self.wanted_speed = Point(sign(s_i.x)*0.1, sign(s_i.y)*0.1)
+
+    def calcAimPoint(self):
+        '''
+        Calculate the aim point for the agent, given its number and the target location
+        :return: The aim point for the UAV.
+        '''
+        if self.agent_number == 0:
+            relative = Point(1,1)
+        elif self.agent_number == 1:
+            relative = Point(-1,-1)
+        elif self.agent_number == 2:
+            relative = Point(-1,1)
+        elif self.agent_number == 3:
+            relative = Point(1,-1)
+        else:
+            print("Aim is not defined for UAV %d!" % self.agent_number)
+            exit(42)
+
+        return relative + self.sim.target
 
         
     def calcAttractive(self, aim):
@@ -126,3 +133,13 @@ class Agent:
                 return_speed += 1/diff
 
         return return_speed
+
+    # You need to fill this function if you want to benchmark your development with an observable value
+    def calcError(self):
+        '''
+        Calculate the error between the current position and the aim point
+        :return: The error between the current position and the aim position.
+        '''
+        aim = self.calcAimPoint()
+        curr = self.current_coord
+        return euDistance(aim, curr)
