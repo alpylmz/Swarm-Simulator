@@ -18,7 +18,7 @@ import random
 
 class Sim:
 
-    def __init__(self, agent_count, time_interval = 0.01, boundaries=[Point(0,0), Point(10,10)]) -> None:
+    def __init__(self, agent_count, time_interval = 0.01, boundaries=[Point(0,0), Point(10,10)], plot_sim = False) -> None:
         '''
         Initialize the agents and set the initial positions of the agents.
         
@@ -48,6 +48,7 @@ class Sim:
         self.collision_err_dist = 0.1
 
         self.error_boundary = 0.02
+        self.plot_sim = plot_sim
 
         self.sim_time = 0.0
 
@@ -71,38 +72,36 @@ class Sim:
 
         self.coords = [agent.current_coord for agent in self.agents]
 
-        # to run GUI event loop
-        plt.ion()
+        if self.plot_sim:
+            # to run GUI event loop
+            plt.ion()
 
-        # here we are creating sub plots
-        self.fig = plt.figure()
-        self.ax = self.fig.add_subplot(111)
-        x = [coord.x for coord in self.coords]
-        y = [coord.y for coord in self.coords]
-        self.agent_drawing, = self.ax.plot(x,y,label='toto',color='b',marker='o',ls='')
-        self.target_drawing, = self.ax.plot(self.target.x, self.target.y, color='r', marker='o')
-        self.target_path_drawing, = self.ax.plot(self.target_path_x, self.target_path_y, color='r')
+            # here we are creating sub plots
+            self.fig = plt.figure()
+            self.ax = self.fig.add_subplot(111)
+            x = [coord.x for coord in self.coords]
+            y = [coord.y for coord in self.coords]
+            self.agent_drawing, = self.ax.plot(x,y,label='toto',color='b',marker='o',ls='')
+            self.target_drawing, = self.ax.plot(self.target.x, self.target.y, color='r', marker='o')
+            self.target_path_drawing, = self.ax.plot(self.target_path_x, self.target_path_y, color='r')
 
-        self.agent_path_drawings = []
-        for i in range(self.agent_count):
-            self.agent_path_drawings.append(self.ax.plot(0,0, color = 'b'))
+            self.agent_path_drawings = []
+            for i in range(self.agent_count):
+                self.agent_path_drawings.append(self.ax.plot(0,0, color = 'b'))
 
+            self.fig.show()
 
-        self.fig.show()
+            self.fig.canvas.mpl_connect('close_event', self._on_close)
 
-        self.fig.canvas.mpl_connect('close_event', self._on_close)
+            plt.xlim([-15, 15])
+            plt.ylim([-15, 15])
 
+            # setting title
+            plt.title("Alp's Simulator", fontsize=20)   
 
-        plt.xlim([-15, 15])
-        plt.ylim([-15, 15])
-
-
-        # setting title
-        plt.title("Alp's Simulator", fontsize=20)   
-
-        # setting x-axis label and y-axis label
-        plt.xlabel("X-axis")
-        plt.ylabel("Y-axis")
+            # setting x-axis label and y-axis label
+            plt.xlabel("X-axis")
+            plt.ylabel("Y-axis")
 
 
 
@@ -180,25 +179,29 @@ class Sim:
         # updating data values
         x = [coord.x for coord in coords]
         y = [coord.y for coord in coords]
-        self.agent_drawing.set_data(x,y)
-        self.target_drawing.set_data(self.target.x, self.target.y)
-        
-        self.target_path_x.append(self.target.x)
-        self.target_path_y.append(self.target.y)
-        self.target_path_drawing.set_data(self.target_path_x, self.target_path_y)
 
-        for i in range(self.agent_count):
-            self.agent_path_drawings[i][0].set_data(self.agent_paths[i][0], self.agent_paths[i][1])
+        if self.plot_sim:
+            self.agent_drawing.set_data(x,y)
+            self.target_drawing.set_data(self.target.x, self.target.y)
+            
+            self.target_path_x.append(self.target.x)
+            self.target_path_y.append(self.target.y)
+            self.target_path_drawing.set_data(self.target_path_x, self.target_path_y)
+
+            for i in range(self.agent_count):
+                self.agent_path_drawings[i][0].set_data(self.agent_paths[i][0], self.agent_paths[i][1])
 
 
-        # This will run the GUI event
-        # loop until all UI events
-        # currently waiting have been processed
-        self.fig.canvas.flush_events()
+            # This will run the GUI event
+            # loop until all UI events
+            # currently waiting have been processed
+            self.fig.canvas.flush_events()
+            plt.title("Alp's Simulator %.2f" % self.sim_time, fontsize=20)
 
-        time.sleep(self.time_interval)
+            # there is no need to sleep if there is no plotting
+            
+            time.sleep(self.time_interval)
         self.sim_time += self.time_interval
-        plt.title("Alp's Simulator %.2f" % self.sim_time, fontsize=20)
 
     def updateTarget(self):
         target_update_rate = 0.1
@@ -253,25 +256,27 @@ class Sim:
             self.agent_path_drawings.append(ax.plot(0,0, color = 'b'))
         """
 
-        self.fig.clear()
-        self.ax = self.fig.add_subplot(111)
-        self.target_path_drawing, = self.ax.plot(self.target_path_x, self.target_path_y, color='r')
-        self.target_path_drawing.set_data(self.target_path_x, self.target_path_y)
+        if self.plot_sim:
 
-        self.agent_path_drawings = []
-        for i in range(self.agent_count):
-            self.agent_path_drawings.append(self.ax.plot(0,0, color = 'b'))
+            self.fig.clear()
+            self.ax = self.fig.add_subplot(111)
+            self.target_path_drawing, = self.ax.plot(self.target_path_x, self.target_path_y, color='r')
+            self.target_path_drawing.set_data(self.target_path_x, self.target_path_y)
 
-        for i in range(self.agent_count):
-            self.agent_path_drawings[i][0].set_data(self.agent_paths[i][0], self.agent_paths[i][1])
-        
-        plt.xlim([-15, 15])
-        plt.ylim([-15, 15])
+            self.agent_path_drawings = []
+            for i in range(self.agent_count):
+                self.agent_path_drawings.append(self.ax.plot(0,0, color = 'b'))
 
-        self.fig.canvas.flush_events()
-        plt.show()
+            for i in range(self.agent_count):
+                self.agent_path_drawings[i][0].set_data(self.agent_paths[i][0], self.agent_paths[i][1])
+            
+            plt.xlim([-15, 15])
+            plt.ylim([-15, 15])
 
-        plt.close('all')
+            self.fig.canvas.flush_events()
+            plt.show()
+
+            plt.close('all')
         print("--------------------------------------------------")
         print("Simulation time is %.2f." % self.sim_time)
         print("The algorithms total error is %.2f." % self.algorithm_error)
@@ -291,7 +296,8 @@ class Sim:
         :param frame: the frame object that triggered the signal
         :return: None
         '''
-        plt.close('all')
+        if self.plot_sim:
+            plt.close('all')
         sys.exit(0)
 
 if __name__ == "__main__":
