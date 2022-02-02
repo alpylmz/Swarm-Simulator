@@ -18,7 +18,7 @@ import random
 
 class Sim:
 
-    def __init__(self, agent_count, time_interval = 0.01, boundaries=[Point(0,0), Point(10,10)], plot_sim = False, beautiful_output = False) -> None:
+    def __init__(self, agent_count, time_interval = 0.01, boundaries=[Point(0,0), Point(10,10)], plot_sim = True, beautiful_output = False) -> None:
         '''
         Initialize the agents and set the initial positions of the agents.
         
@@ -34,20 +34,41 @@ class Sim:
         signal.signal(signal.SIGTSTP, self.close_signal_handler)
 
         self.agent_count = agent_count
-        self.agents = [Agent(i,
-                     Point(uniform(boundaries[0].x, boundaries[1].x), 
-                           uniform(boundaries[0].y, boundaries[1].y) ), self) for i in range(agent_count)]
-        
+        # obstacles, if exists
+        # for now only circles are supported
+        self.obstacles = [[Point(9,5), 1], [Point(2, 5), 1]]
+        #self.obstacles = []
+        self.agents = []
+        for i in range(agent_count):
+            # REWRITE HERE!
+            while True:
+                agent_coord = Point(uniform(boundaries[0].x, boundaries[1].x), 
+                                    uniform(boundaries[0].y, boundaries[1].y) )
+                wrong_flag = False
+
+                for obstacle in self.obstacles:
+                    dist = euDistance(obstacle[0], agent_coord)
+                    if dist < (obstacle[1] + 2):
+                        wrong_flag = True
+                        break
+
+                if not wrong_flag:
+                    break    
+
+            self.agents.append(Agent(i, agent_coord, self))
+            
+
+
         self.time_interval = time_interval
         self.acc_for_interval = 1/time_interval
-        self.max_acceleration = 800.0
+        self.max_acceleration = 400.0
         self.max_jerk = 1.0
         self.max_jerk_for_time_interval = self.max_jerk / self.time_interval
-        self.acc_step = 16000
+        self.acc_step = 800
         self.collision_warn_dist = 0.3
         self.collision_err_dist = 0.1
 
-        self.error_boundary = 0.02
+        self.error_boundary = 0.002
         self.plot_sim = plot_sim
         self.beautiful_output = beautiful_output
 
@@ -90,6 +111,11 @@ class Sim:
             for i in range(self.agent_count):
                 self.agent_path_drawings.append(self.ax.plot(0,0, color = 'b'))
 
+            # obstacles
+            for obstacle in self.obstacles:
+                circle1 = plt.Circle((obstacle[0].x, obstacle[0].y), obstacle[1], color = 'r')
+                self.ax.add_patch(circle1)
+
             self.fig.show()
 
             self.fig.canvas.mpl_connect('close_event', self._on_close)
@@ -119,8 +145,10 @@ class Sim:
             return False
         new_positions = []
         for index, agent in enumerate(self.agents):
-            agent.update()
-
+            _ret = agent.update()
+            if _ret == False:
+                return False
+            
             new_acc = Point(0, 0)
             
             diff_x = agent.wanted_speed.x - agent.current_speed.x

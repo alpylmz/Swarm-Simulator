@@ -1,7 +1,7 @@
 from time import sleep
 from helpers import Point, euDistance
 from enum import Enum
-from numpy import sign, isclose
+from numpy import diff, sign, isclose
 
 class AlgoType(Enum):
     DEFAULT = 1
@@ -28,9 +28,10 @@ class Agent:
             self.current_speed = Point(-0.01, -0.01)
         self.current_acc = Point(0., 0.)
         self.wanted_speed = Point(0., 0.)
-        self.algorithm_type = AlgoType.SLIDING2
+        self.algorithm_type = AlgoType.SLIDING1
         self.attractive_constant = 0.5
-        self.repulsive_constant = 0.9
+        self.repulsive_constant = 1.5
+        self.max_speed = 0.1
 
     def set_speed(self, speed):
         '''
@@ -54,7 +55,12 @@ class Agent:
         aim = self.calcAimPoint()
 
         att_speed = self.calcAttractive(aim)
-        rep_speed = self.calcRepulsive()
+        rep_speed_agents = self.calcRepulsiveAgents()
+        rep_speed_obstacles = self.calcRepulsiveObstacles()
+        if rep_speed_obstacles is False:
+            return False
+        rep_speed = rep_speed_agents + rep_speed_obstacles
+
 
         if self.algorithm_type == AlgoType.DEFAULT:
             self.wanted_speed = att_speed * self.attractive_constant + rep_speed * self.repulsive_constant
@@ -87,6 +93,9 @@ class Agent:
             s_i = self.current_speed + self.wanted_speed * 100         
             self.wanted_speed = Point(sign(s_i.x)*0.1, sign(s_i.y)*0.1)
 
+        self.wanted_speed /= self.wanted_speed.length()
+        self.wanted_speed /= 5
+
     def calcAimPoint(self):
         '''
         Calculate the aim point for the agent, given its number and the target location
@@ -118,7 +127,7 @@ class Agent:
         '''
         return Point(aim.x - self.current_coord.x, aim.y - self.current_coord.y)
 
-    def calcRepulsive(self):
+    def calcRepulsiveAgents(self):
         '''
         Calculate the repulsive force for a agent.
         
@@ -133,6 +142,25 @@ class Agent:
                 return_speed += 1/diff
 
         return return_speed
+
+    def calcRepulsiveObstacles(self):
+        return_speed = Point(0.0, 0.0)
+        for obstacle in self.sim.obstacles:
+            center = obstacle[0]
+            r = obstacle[1]
+            center_distance = euDistance(center, self.current_coord)
+            circle_distance = center_distance - r
+            if circle_distance < 0:
+                print("Inside of obstacle!")
+                return False
+            if circle_distance < 1:
+                dist = self.current_coord + center * -1
+                dist.x -= r
+                dist.y -= r
+                return_speed += 1/dist
+        
+        return return_speed
+
 
     # You need to fill this function if you want to benchmark your development with an observable value
     def calcError(self):
