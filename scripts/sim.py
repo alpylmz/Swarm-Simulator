@@ -18,7 +18,7 @@ import random
 
 class Sim:
 
-    def __init__(self, agent_count, time_interval = 0.01, boundaries=[Point(0,0), Point(10,10)], plot_sim = False) -> None:
+    def __init__(self, agent_count, time_interval = 0.01, boundaries=[Point(0,0), Point(10,10)], plot_sim = False, beautiful_output = False) -> None:
         '''
         Initialize the agents and set the initial positions of the agents.
         
@@ -49,6 +49,7 @@ class Sim:
 
         self.error_boundary = 0.02
         self.plot_sim = plot_sim
+        self.beautiful_output = beautiful_output
 
         self.sim_time = 0.0
 
@@ -199,7 +200,7 @@ class Sim:
             plt.title("Alp's Simulator %.2f" % self.sim_time, fontsize=20)
 
             # there is no need to sleep if there is no plotting
-            
+
             time.sleep(self.time_interval)
         self.sim_time += self.time_interval
 
@@ -277,14 +278,22 @@ class Sim:
             plt.show()
 
             plt.close('all')
-        print("--------------------------------------------------")
-        print("Simulation time is %.2f." % self.sim_time)
-        print("The algorithms total error is %.2f." % self.algorithm_error)
-        print("Average error is %.2f." % (self.algorithm_error/self.sim_time))
-        print("--------------------------------------------------")
-        print("Dangereous event count is %d." % self.dangerous_event_count)
-        print("Collision count is %d." % self.collision_count)
-        print("--------------------------------------------------")
+        
+        if self.beautiful_output:
+            print("--------------------------------------------------")
+            print("Simulation time is %.2f." % self.sim_time)
+            print("The algorithms total error is %.2f." % self.algorithm_error)
+            print("Average error is %.2f." % (self.algorithm_error/self.sim_time))
+            print("--------------------------------------------------")
+            print("Dangereous event count is %d." % self.dangerous_event_count)
+            print("Collision count is %d." % self.collision_count)
+            print("--------------------------------------------------")
+        else:
+            print("%.2f" % self.sim_time)
+            print("%.2f." % self.algorithm_error)
+            print("%.2f." % (self.algorithm_error/self.sim_time))
+            print("%d." % self.dangerous_event_count)
+            print("%d." % self.collision_count)
         sys.exit(0)
 
     def close_signal_handler(self, sig, frame):
