@@ -61,9 +61,9 @@ class Agent:
         # assume u_o is (0.1,0.1)
         elif self.algorithm_type == AlgoType.SLIDING1:
             self.wanted_speed = att_speed * self.attractive_constant + rep_speed * self.repulsive_constant
-            s_i = self.current_speed + self.wanted_speed * 100
+            s_i = self.current_speed + self.wanted_speed * 10
             temp = Point(sign(s_i.x), sign(s_i.y))
-            self.wanted_speed = temp * 0.1
+            self.wanted_speed = temp * 0.2
         elif self.algorithm_type == AlgoType.SLIDING2:
             self.wanted_speed = att_speed * self.attractive_constant + rep_speed * self.repulsive_constant
         

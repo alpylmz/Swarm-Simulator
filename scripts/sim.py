@@ -12,6 +12,7 @@ import sys
 import signal
 import json
 import argparse
+import random
 
 
 
@@ -46,6 +47,7 @@ class Sim:
         self.collision_warn_dist = 0.3
         self.collision_err_dist = 0.1
 
+        self.error_boundary = 0.02
 
         self.sim_time = 0.0
 
@@ -61,7 +63,8 @@ class Sim:
 
         # there are several paths that you can choose for target, number indicates that
         self.target_path_index = 2
-        self.target = Point(1, 1)
+        self.target_init = Point(1, 1)
+        self.target = self.target_init
         self.target_path_x = [self.target.x]
         self.target_path_y = [self.target.y]
         self.target_update_state = 0
@@ -168,7 +171,10 @@ class Sim:
         self.checkCollisions(new_positions)
 
         for pose, agent in zip(new_positions, self.agents):
-            agent.current_coord = pose
+            agent.current_coord = pose + Point(
+                                        random.uniform(-1 * self.error_boundary, self.error_boundary),
+                                        random.uniform(-1 * self.error_boundary, self.error_boundary))
+
 
         coords = self.getCoords()
         # updating data values
@@ -202,7 +208,9 @@ class Sim:
             self._on_close(None)
             # This if you want to continue the simulation endlessly
             """
-            target_state = 0
+            self.target_update_state = 0
+            self.target = self.target_init
+            self.updateTarget()
             return
             """
 
