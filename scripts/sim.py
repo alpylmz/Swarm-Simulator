@@ -112,7 +112,11 @@ class Sim:
         
         :return: None
         '''
-        self.updateTarget()
+        _ret = self.updateTarget()
+        # updateTarget returns False when the simulation need to be ended
+        # step will return False in this case
+        if _ret == False:
+            return False
         new_positions = []
         for index, agent in enumerate(self.agents):
             agent.update()
@@ -210,6 +214,7 @@ class Sim:
         if self.target is None:
             # This if you want to end the simulation after one loop
             self._on_close(None)
+            return False
             # This if you want to continue the simulation endlessly
             """
             self.target_update_state = 0
@@ -217,7 +222,6 @@ class Sim:
             self.updateTarget()
             return
             """
-
 
     def getCoords(self):
         '''
@@ -294,7 +298,6 @@ class Sim:
             print("%.2f." % (self.algorithm_error/self.sim_time))
             print("%d." % self.dangerous_event_count)
             print("%d." % self.collision_count)
-        sys.exit(0)
 
     def close_signal_handler(self, sig, frame):
         '''

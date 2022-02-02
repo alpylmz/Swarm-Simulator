@@ -4,4 +4,7 @@ from sim import Sim
 sim = Sim(4)
 
 while True:
-    sim.step()
+    ret = sim.step()
+    if ret == False:
+        print("Simulation ended gracefully!")
+        break
