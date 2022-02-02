@@ -7,6 +7,12 @@ class AlgoType(Enum):
     DEFAULT = 1
     SLIDING1 = 2
     SLIDING2 = 3
+    STATE1 = 4
+
+class Machine1State(Enum):
+    NOT_IN_FORMATION = 1
+    IN_FORMATION = 2
+    BROKEN_FORMATION = 3
 
 class Agent:
     def __init__(self, agent_num, coord, sim) -> None:
@@ -28,7 +34,8 @@ class Agent:
             self.current_speed = Point(-0.01, -0.01)
         self.current_acc = Point(0., 0.)
         self.wanted_speed = Point(0., 0.)
-        self.algorithm_type = AlgoType.SLIDING1
+        self.algorithm_type = AlgoType.STATE1
+        self.machine_state = Machine1State.NOT_IN_FORMATION
         self.attractive_constant = 0.5
         self.repulsive_constant = 1.5
         self.max_speed = 0.1
@@ -64,12 +71,18 @@ class Agent:
 
         if self.algorithm_type == AlgoType.DEFAULT:
             self.wanted_speed = att_speed * self.attractive_constant + rep_speed * self.repulsive_constant
+            if self.wanted_speed.length() > 1:
+                self.wanted_speed /= self.wanted_speed.length()
+                self.wanted_speed /= 10
         # assume u_o is (0.1,0.1)
         elif self.algorithm_type == AlgoType.SLIDING1:
             self.wanted_speed = att_speed * self.attractive_constant + rep_speed * self.repulsive_constant
             s_i = self.current_speed + self.wanted_speed * 10
             temp = Point(sign(s_i.x), sign(s_i.y))
             self.wanted_speed = temp * 0.2
+            if self.wanted_speed.length() > 1:
+                self.wanted_speed /= self.wanted_speed.length()
+                self.wanted_speed /= 10
         elif self.algorithm_type == AlgoType.SLIDING2:
             self.wanted_speed = att_speed * self.attractive_constant + rep_speed * self.repulsive_constant
         
@@ -88,13 +101,78 @@ class Agent:
                 #print("deriv is close for agent %d" % self.agent_number, str(s_derivative)),
                 #print("attractive part is ", str(att_derivative))
                 #print("current acc is ", str(self.current_acc))
+                self.wanted_speed /= self.wanted_speed.length()
+                self.wanted_speed /= 5
                 return
             
             s_i = self.current_speed + self.wanted_speed * 100         
             self.wanted_speed = Point(sign(s_i.x)*0.1, sign(s_i.y)*0.1)
 
-        self.wanted_speed /= self.wanted_speed.length()
-        self.wanted_speed /= 5
+            if self.wanted_speed.length() > 1:
+                self.wanted_speed /= self.wanted_speed.length()
+                self.wanted_speed /= 10
+
+        elif self.algorithm_type == AlgoType.STATE1:
+            # state transitions
+            epsilon_for_dist = 0.1
+            dist = euDistance(aim, self.current_coord)
+            if self.machine_state == Machine1State.NOT_IN_FORMATION:
+                if dist < epsilon_for_dist:
+                    #print("state changed to information %d" % self.agent_number)
+                    self.machine_state = Machine1State.IN_FORMATION
+            
+            elif self.machine_state == Machine1State.IN_FORMATION:
+                if dist > epsilon_for_dist:
+                    #print("state changed to notinformed %d" % self.agent_number)
+                    self.machine_state = Machine1State.BROKEN_FORMATION
+
+            elif self.machine_state == Machine1State.BROKEN_FORMATION:
+                if dist < epsilon_for_dist:
+                    self.machine_state = Machine1State.IN_FORMATION
+
+            # things that will be changed by state
+            attractive_constant = None
+            repulsive_constant = None
+            if self.machine_state == Machine1State.NOT_IN_FORMATION:
+                attractive_constant = self.attractive_constant * 2
+                repulsive_constant = self.repulsive_constant
+            elif self.machine_state == Machine1State.BROKEN_FORMATION:
+                attractive_constant = self.attractive_constant * 2
+                repulsive_constant = self.repulsive_constant
+            elif self.machine_state == Machine1State.IN_FORMATION:
+                attractive_constant = self.attractive_constant
+                repulsive_constant = self.repulsive_constant
+
+            self.wanted_speed = att_speed * attractive_constant + rep_speed * repulsive_constant
+
+            att_derivative = Point(-1, -1) * attractive_constant
+            s_derivative = self.current_acc + att_derivative
+            
+            boundary_val = 0.2 * self.sim.acc_for_interval
+            if s_derivative.x < boundary_val and s_derivative.x > -boundary_val and s_derivative.y < boundary_val and s_derivative.y > -boundary_val:
+                #print("deriv is close for agent %d" % self.agent_number, str(s_derivative)),
+                #print("attractive part is ", str(att_derivative))
+                #print("current acc is ", str(self.current_acc))
+                if self.machine_state == Machine1State.NOT_IN_FORMATION:
+                    self.wanted_speed /= self.wanted_speed.length()
+                    self.wanted_speed /= 4
+                elif self.machine_state == Machine1State.BROKEN_FORMATION:
+                    self.wanted_speed /= self.wanted_speed.length()
+                    self.wanted_speed /= 6
+                    print("broken", self.wanted_speed)
+                elif self.machine_state == Machine1State.IN_FORMATION:
+                    # just some constant number for now
+                    if rep_speed.length() > 3:
+                        self.wanted_speed = rep_speed * repulsive_constant * 0.1
+                    pass
+                return
+            
+            if self.machine_state == Machine1State.NOT_IN_FORMATION or self.machine_state == Machine1State.BROKEN_FORMATION:
+                s_i = self.current_speed + self.wanted_speed * 100         
+                self.wanted_speed = Point(sign(s_i.x)*0.1, sign(s_i.y)*0.1)
+
+
+
 
     def calcAimPoint(self):
         '''

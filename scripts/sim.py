@@ -36,8 +36,8 @@ class Sim:
         self.agent_count = agent_count
         # obstacles, if exists
         # for now only circles are supported
-        self.obstacles = [[Point(9,5), 1], [Point(2, 5), 1]]
-        #self.obstacles = []
+        #self.obstacles = [[Point(9,5), 1], [Point(2, 5), 1]]
+        self.obstacles = []
         self.agents = []
         for i in range(agent_count):
             # REWRITE HERE!
@@ -146,6 +146,7 @@ class Sim:
         new_positions = []
         for index, agent in enumerate(self.agents):
             _ret = agent.update()
+            print("wanted speed is ", agent.wanted_speed, " ", agent.machine_state)
             if _ret == False:
                 return False
             
