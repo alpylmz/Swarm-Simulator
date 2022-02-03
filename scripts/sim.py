@@ -61,10 +61,10 @@ class Sim:
 
         self.time_interval = time_interval
         self.acc_for_interval = 1/time_interval
-        self.max_acceleration = 400.0
+        self.max_acceleration = 20.0
         self.max_jerk = 1.0
         self.max_jerk_for_time_interval = self.max_jerk / self.time_interval
-        self.acc_step = 800
+        self.acc_step = 10
         self.collision_warn_dist = 0.3
         self.collision_err_dist = 0.1
 
@@ -73,6 +73,8 @@ class Sim:
         self.beautiful_output = beautiful_output
 
         self.sim_time = 0.0
+
+        self.sim_result = None
 
         # benchmark
         self.algorithm_error = 0.0
@@ -146,7 +148,7 @@ class Sim:
         new_positions = []
         for index, agent in enumerate(self.agents):
             _ret = agent.update()
-            print("wanted speed is ", agent.wanted_speed, " ", agent.machine_state)
+            #print(index, agent.wanted_speed, agent.machine_state)
             if _ret == False:
                 return False
             
@@ -267,11 +269,13 @@ class Sim:
             for j, pose2 in enumerate(positions[i + 1:]):
                 dist = euDistance(pose1, pose2)
                 if dist < self.collision_err_dist:
-                    print("There is a collision between agent %d and %d." % (i, j+i+1))
+                    if self.beautiful_output is not None:
+                        print("There is a collision between agent %d and %d." % (i, j+i+1))
                     self.collision_count += 1
 
                 elif dist < self.collision_warn_dist:
-                    print("Two agents are dangereously close, %d - %d" % (i, j+i+1))
+                    if self.beautiful_output is not None:
+                        print("Two agents are dangereously close, %d - %d" % (i, j+i+1))
                     self.dangerous_event_count += 1
                     
 
@@ -312,7 +316,7 @@ class Sim:
 
             plt.close('all')
         
-        if self.beautiful_output:
+        if self.beautiful_output == True:
             print("--------------------------------------------------")
             print("Simulation time is %.2f." % self.sim_time)
             print("The algorithms total error is %.2f." % self.algorithm_error)
@@ -321,12 +325,17 @@ class Sim:
             print("Dangereous event count is %d." % self.dangerous_event_count)
             print("Collision count is %d." % self.collision_count)
             print("--------------------------------------------------")
-        else:
+        elif self.beautiful_output == False:
             print("%.2f" % self.sim_time)
             print("%.2f." % self.algorithm_error)
             print("%.2f." % (self.algorithm_error/self.sim_time))
             print("%d." % self.dangerous_event_count)
             print("%d." % self.collision_count)
+        self.sim_result = {"sim time": self.sim_time,
+                            "algorithm error": self.algorithm_error,
+                            "average error": self.algorithm_error/self.sim_time,
+                            "dangerous event count": self.dangerous_event_count,
+                            "collision count": self.collision_count}
 
     def close_signal_handler(self, sig, frame):
         '''
@@ -340,6 +349,10 @@ class Sim:
         if self.plot_sim:
             plt.close('all')
         sys.exit(0)
+
+    def getSimOutput(self):
+        return self.sim_result
+
 
 if __name__ == "__main__":
     x = None

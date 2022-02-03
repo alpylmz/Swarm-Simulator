@@ -114,7 +114,7 @@ class Agent:
 
         elif self.algorithm_type == AlgoType.STATE1:
             # state transitions
-            epsilon_for_dist = 0.1
+            epsilon_for_dist = 0.5
             dist = euDistance(aim, self.current_coord)
             if self.machine_state == Machine1State.NOT_IN_FORMATION:
                 if dist < epsilon_for_dist:
@@ -158,8 +158,8 @@ class Agent:
                     self.wanted_speed /= 4
                 elif self.machine_state == Machine1State.BROKEN_FORMATION:
                     self.wanted_speed /= self.wanted_speed.length()
-                    self.wanted_speed /= 6
-                    print("broken", self.wanted_speed)
+                    self.wanted_speed /= 2
+                    #print("broken", self.wanted_speed)
                 elif self.machine_state == Machine1State.IN_FORMATION:
                     # just some constant number for now
                     if rep_speed.length() > 3:
