@@ -33,7 +33,13 @@ class Sim:
         signal.signal(signal.SIGINT, self.close_signal_handler)
         signal.signal(signal.SIGTSTP, self.close_signal_handler)
 
+        #manager = plt.get_current_fig_manager()
+        #manager.full_screen_toggle()
+
+        self.save_fig = True
         self.agent_count = agent_count
+        self.fig_save_path = "../figures/"
+        self.fig_save_count = 0
         # obstacles, if exists
         # for now only circles are supported
         #self.obstacles = [[Point(9,5), 1], [Point(2, 5), 1]]
@@ -65,8 +71,8 @@ class Sim:
         self.max_jerk = 1.0
         self.max_jerk_for_time_interval = self.max_jerk / self.time_interval
         self.acc_step = 10
-        self.collision_warn_dist = 0.3
-        self.collision_err_dist = 0.1
+        self.collision_warn_dist = 0.1
+        self.collision_err_dist = 0.05
 
         self.error_boundary = 0.002
         self.plot_sim = plot_sim
@@ -118,15 +124,19 @@ class Sim:
                 circle1 = plt.Circle((obstacle[0].x, obstacle[0].y), obstacle[1], color = 'r')
                 self.ax.add_patch(circle1)
 
+            plt.xlim([-15, 15])
+            plt.ylim([-15, 15])
+            
             self.fig.show()
+            if self.save_fig:
+                self.fig.savefig('figures/' + str(self.fig_save_count) + '.png')
+                self.fig_save_count += 1
 
             self.fig.canvas.mpl_connect('close_event', self._on_close)
 
-            plt.xlim([-15, 15])
-            plt.ylim([-15, 15])
 
             # setting title
-            plt.title("Alp's Simulator", fontsize=20)   
+            #plt.title("Swarm Simulator", fontsize=15)   
 
             # setting x-axis label and y-axis label
             plt.xlabel("X-axis")
@@ -205,10 +215,14 @@ class Sim:
 
         self.checkCollisions(new_positions)
 
-        for pose, agent in zip(new_positions, self.agents):
-            agent.current_coord = pose + Point(
-                                        random.uniform(-1 * self.error_boundary, self.error_boundary),
-                                        random.uniform(-1 * self.error_boundary, self.error_boundary))
+        if self.error_boundary != 0.0:
+            for pose, agent in zip(new_positions, self.agents):
+                agent.current_coord = pose + Point(
+                                            random.uniform(-1 * self.error_boundary, self.error_boundary),
+                                            random.uniform(-1 * self.error_boundary, self.error_boundary))
+        else:
+            for pose, agent in zip(new_positions, self.agents):
+                agent.current_coord = pose
 
 
         coords = self.getCoords()
@@ -227,12 +241,15 @@ class Sim:
             for i in range(self.agent_count):
                 self.agent_path_drawings[i][0].set_data(self.agent_paths[i][0], self.agent_paths[i][1])
 
+            if self.save_fig:
+                self.fig.savefig('figures/' + str(self.fig_save_count) + '.png')
+                self.fig_save_count += 1
 
             # This will run the GUI event
             # loop until all UI events
             # currently waiting have been processed
             self.fig.canvas.flush_events()
-            plt.title("Alp's Simulator %.2f" % self.sim_time, fontsize=20)
+            #plt.title("Swarm Simulator %.2f" % self.sim_time, fontsize=15)
 
             # there is no need to sleep if there is no plotting
 

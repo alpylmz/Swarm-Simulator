@@ -1,13 +1,14 @@
 from time import sleep
 from helpers import Point, euDistance
 from enum import Enum
-from numpy import diff, sign, isclose
+from numpy import diff, sign, isclose, sqrt
 
 class AlgoType(Enum):
     DEFAULT = 1
     SLIDING1 = 2
     SLIDING2 = 3
     STATE1 = 4
+    SLIDINGSTATE = 5
 
 class Machine1State(Enum):
     NOT_IN_FORMATION = 1
@@ -34,10 +35,10 @@ class Agent:
             self.current_speed = Point(-0.01, -0.01)
         self.current_acc = Point(0., 0.)
         self.wanted_speed = Point(0., 0.)
-        self.algorithm_type = AlgoType.STATE1
+        self.algorithm_type = AlgoType.SLIDINGSTATE
         self.machine_state = Machine1State.NOT_IN_FORMATION
         self.attractive_constant = 0.5
-        self.repulsive_constant = 1.5
+        self.repulsive_constant = 0.7
         self.max_speed = 0.1
 
     def set_speed(self, speed):
@@ -171,9 +172,48 @@ class Agent:
                 s_i = self.current_speed + self.wanted_speed * 100         
                 self.wanted_speed = Point(sign(s_i.x)*0.1, sign(s_i.y)*0.1)
 
+        elif self.algorithm_type == AlgoType.SLIDINGSTATE:
+            lie_deriv1 = Point(0, 0)
+            lie_deriv2 = Point(0, 0)
+            current_position = self.current_coord
 
+            # atttractive potential field is
+            # att = (eucDistance(aim - current_position))^2 
+            attractive_potential1 = (euDistance(aim, current_position) ** 4)
+            attractive_speed1 = aim - current_position
+            attractive_speed1 /= attractive_speed1.length()
+            attractive_speed1 *= 0.01
+            temp_position = current_position + attractive_speed1
+            attractive_potential2 = (euDistance(aim, temp_position) ** 4)
+            attractive_derivative = (attractive_potential2 - attractive_potential1) / 0.01
 
+            # repulsive potential field is
+            # rep = (eucDistance(current_position - other_agents_positions))^2
+            repulsive_potential1 = 0
+            repulsive_speed = Point(0, 0)
+            agentCoords = [agent.current_coord for agent in self.sim.agents if agent.agent_number != self.agent_number]
+            for agent in agentCoords:
+                repulsive_potential1 += (euDistance(agent, current_position) ** 2) * 0.01
+                repulsive_speed = 1/(current_position - agent)
+            repulsive_speed /= repulsive_speed.length()
+            repulsive_speed *= 0.01
+            temp_position = current_position + repulsive_speed
+            repulsive_potential2 = 0
+            for agent in agentCoords:
+                repulsive_potential2 += (euDistance(agent, temp_position) ** 2)
+            repulsive_derivative = (repulsive_potential2 - repulsive_potential1) / 0.01
 
+            lie_deriv1 = attractive_derivative
+            lie_deriv2 = repulsive_derivative
+
+            # now calculate the speed by using lie_deriv1 and lie_deriv2 with sliding mode control
+            self.wanted_speed = 1 / (lie_deriv2 - lie_deriv1) * (lie_deriv2 * attractive_speed1 - lie_deriv1 * repulsive_speed)
+            if euDistance(aim, current_position) > 0.3:
+                self.wanted_speed *= 30
+            elif euDistance(aim, current_position) > 0.2:
+                self.wanted_speed *= 10
+
+    
     def calcAimPoint(self):
         '''
         Calculate the aim point for the agent, given its number and the target location

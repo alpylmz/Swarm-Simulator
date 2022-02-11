@@ -1,15 +1,15 @@
 from sim import Sim
 from time import sleep
 from tqdm import tqdm
+import matplotlib.pyplot as plt
 
-multi_sim = True
+multi_sim = False
 if multi_sim == False:
     sim = Sim(4, plot_sim=True, beautiful_output=True)
 
     while True:
         ret = sim.step()
         if ret == False:
-            print("Simulation ended gracefully!")
             break
 
 else:

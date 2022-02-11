@@ -81,6 +81,17 @@ class Point:
             return True
         return False
 
+    def __sub__(self, o):
+        '''
+        Subtract two points.
+        
+        :param self: This is a reference to the current instance of the class
+        :param o: the object to be subtracted from the current object
+        :return: A new Point object.
+        '''
+        return Point(self.x - o.x,
+                     self.y - o.y)
+
     def __str__(self):
         '''
         Return a string representation of the point object.
